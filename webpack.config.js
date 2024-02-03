@@ -19,7 +19,8 @@ module.exports = function(env){
         output:{
             path: path.resolve(__dirname, 'build'),
             filename: '[contenthash].js',
-            clean: true
+            clean: true,
+            publicPath : '/'
         },
         mode:'none',
         module:{

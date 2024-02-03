@@ -1,8 +1,27 @@
 import React from "react";
 import {NavLink, Link} from 'react-router-dom';
 import AppLogo from '../assets/images/appLogoPng.png';
+import {useAuth} from '../core/hooks/useAuth';
+import defaultImage from '../assets/images/avatar.jpg';
+import { USER_TYPE } from "../core/enums/userTypeEnum";
 
 export const TopNavigation = (props)=>{
+    const {isLogin, logout, user} = useAuth();
+
+    const resolveUserType = (type)=>{
+        
+        switch(type){
+            case USER_TYPE.Admin:
+                return "system admin";
+            case USER_TYPE.BrandAdmin:
+                return "brand admin";
+            case USER_TYPE.BrandEditor:
+                return "brand editor";
+            case USER_TYPE.BrandRootAdmin:
+                return "brand super admin";
+        }
+    }
+
     return (
         <nav className="navbar navbar-expand-lg navbar-light bg-white sticky" data-offset="500">
             <div className="container">
@@ -20,9 +39,6 @@ export const TopNavigation = (props)=>{
                             <NavLink to="/" className="nav-link">Home</NavLink>
                         </li>
                         <li className="nav-item">
-                            <NavLink to="/offers" className="nav-link">Offers</NavLink>
-                        </li>
-                        <li className="nav-item">
                             <NavLink to="/brands" className="nav-link">Brands</NavLink>
                         </li>
                         <li className="nav-item">
@@ -31,18 +47,40 @@ export const TopNavigation = (props)=>{
                         <li className="nav-item">
                             <NavLink to="/contact" className="nav-link">Contact</NavLink>
                         </li>
-                        <li className="nav-item">
-                            <NavLink to="/register" className="nav-link">Register</NavLink>
-                        </li>
-                        <li className="nav-item">
-                            <NavLink to="/login" className="nav-link">Login</NavLink>
-                        </li>
-                        {
-                            /*
-                            <li className="nav-item">
-                            <button className="btn btn-primary ml-lg-2">Add Offer</button>
-                        </li>
-                            */
+
+                        {isLogin 
+                            ?
+                            (
+                                <>
+                                    <li className="nav-item">
+                                        <NavLink to="/dashboard" className="nav-link">Dashboard</NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <span className="nav-link cursor-pointer" onClick={()=> logout()}>Logout</span>
+                                    </li>
+                                </>
+                            )
+                            :
+                            (
+                                <>
+                                    <li className="nav-item">
+                                        <NavLink to="/login" className="nav-link">Login</NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink to="/register" className="nav-link">Register</NavLink>
+                                    </li>
+                                </>
+                            )
+                            
+                        }
+                        {isLogin &&
+                            <div className="user-info d-flex border rounded p-1 pl-2 pr-2">
+                                <img src={defaultImage} height={50} width={50} className="rounded-circle"/>
+                                <div className="ml-2">
+                                    <div className="text-dark" style={{fontSize:'18px'}}>{user.UserName}</div>
+                                    <div className="text-secondary" style={{fontSize:'13px'}}>{resolveUserType(user.UserType)}</div>
+                                </div>
+                            </div>
                         }
                         
                     </ul>

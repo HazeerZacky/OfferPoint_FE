@@ -71,3 +71,9 @@ export function isUndefinedOrNull(value) { return isUndefined(value) || (value =
 export function isUndefinedNullOrEmpty(value) {
     return isUndefinedOrNull(value) || (isTypeOf(value, PRIMITIVE_TYPES.object) && !(Array.isArray(value) ? value : Object.keys(value)).length) || (isString(value) && _.isEmpty(value.trim()));
 }
+
+
+export function isURL(textval) {
+    var urlregex = new RegExp("^(http|https|ftp)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*$");
+    return urlregex.test(textval);
+}

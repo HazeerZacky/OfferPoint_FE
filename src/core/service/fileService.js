@@ -3,7 +3,8 @@ import config from '../config';
 
 export default {
     createFile,
-    removeFilesByModuleAndRefAndFileUsage
+    removeFilesByModuleAndRefAndFileUsage,
+    getFilesByModuleAndRefAndFileUsage
 };
 
 function createFile(fileModelFormData){
@@ -12,4 +13,8 @@ function createFile(fileModelFormData){
 
 function removeFilesByModuleAndRefAndFileUsage(ModuleID, ReferenceID, FileUsageType){
     return axios.delete(`${config.apiEndPoint}/api/OfferPoint/File/removeFile/${ModuleID}/${ReferenceID}/${FileUsageType}`).then((res)=> res.data);
+}
+
+function getFilesByModuleAndRefAndFileUsage(ModuleID, ReferenceID, FileUsageType){
+    return axios.get(`${config.apiEndPoint}/api/OfferPoint/File/getFilesByModuleAndRefAndFileUsage/${ModuleID}/${ReferenceID}/${FileUsageType}`).then((res)=> res.data);
 }

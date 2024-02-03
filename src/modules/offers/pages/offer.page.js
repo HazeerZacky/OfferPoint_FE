@@ -1,38 +1,79 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import moment from "moment";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { BreadCrumb } from "../../../components/breadcrumb";
 import { PopUp } from "../../../components/popup";
 import { OfferForm } from "../components/offer.form";
 import {resolveImageURL} from '../../../core/utils/url';
 import offerService from '../service';
+import brandService from '../../brand/service';
 import { CategorySelector } from "../../category/components/categorySelector";
 import {useAuth} from '../../../core/hooks/useAuth';
-import moment from "moment";
+import {OfferFilterModel} from '../../../core/models/offer-filter-model';
+import { isUndefinedNullOrEmpty } from "../../../core/utils/checking";
+import Carousel from 'react-bootstrap/Carousel';
+import fileService from '../../../core/service/fileService';
+import { FILE_USAGE_TYPE } from "../../../core/enums/FIleUsageTypeEnum";
+import defaultBannerImage from '../../../assets/images/banner-default.jpg';
+import { MODULE_TYPE } from "../../../core/enums/ModuleTypeEnum";
+import defaultCarouselImage from '../../../assets/images/company-carousel-default.png';
+import { PaginationModel } from "../../../core/models/pagination";
+import { Pagination } from "../../../components/pagination";
 
-const initialQuery = {
-
-}
-
-export const OfferPage = ()=>{
+export const OfferPage = (props)=>{
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
+    const tagFromQuery = searchParams.get('tag');
     const [showPopup, setShowPopup] = useState(false);
     const [items, setItems] = useState([]);
-    const [query, setQuery] = useState(initialQuery);
+    const [mostRecentItems, setMostRecentItems] = useState([]);
+    const [mostPopularItems, setMostPopularItems] = useState([]);
+    const [query, setQuery] = useState({...new OfferFilterModel(), BrandID: !isUndefinedNullOrEmpty(location.state) ? location.state.BrandID : 0, SearchText : tagFromQuery ? tagFromQuery : "", Pagination: new PaginationModel() });
     const [selectedId, setSelectedId] = useState(null);
-    const {user} = useAuth();
+    const {user, isLogin, isBrandUser, isBrandAdmin, isBrandRootAdmin, isAdmin} = useAuth();
+    const BrandID = isLogin && isBrandUser() ? user.BrandID : 0;
+    const navigate = useNavigate();
+    const [L1Ad, setL1Ad] = useState(null);
+    const [L2Ad, setL2Ad] = useState(null);
+    const [sliderImage, setSliderImage] = useState({[FILE_USAGE_TYPE.CS1]: null, [FILE_USAGE_TYPE.CS2]: null, [FILE_USAGE_TYPE.CS3]: null});
+    const [isVerifiedBrand, setIsVerifiedBrand] = useState(false);
 
     useEffect(()=>{
         fetchOffers();
+        fetchMostRecent();
+        fetchMostPopular();
+        fetchAds(FILE_USAGE_TYPE.L1Ads);
+        fetchAds(FILE_USAGE_TYPE.L2Ads);
+        fetchAllSliders();
+        if(isBrandUser()){
+            brandService.IsVerifiedBrand(user.BrandID).then((v)=> setIsVerifiedBrand(v));
+        }
     },[]);
 
-    const fetchOffers = ()=>{
-        offerService.getAllFiltered(query).then((data)=>{
-            setItems(data);
+    const fetchOffers = (v = {})=>{
+        offerService.getAllFiltered({...query, ...v}).then((data)=>{
+            setItems(data.Items);
+            onChangePagination({TotalRecord: data.TotalRecord, PageNumber: data.PageNumber});
+        })
+    }
+
+    const fetchMostRecent = ()=>{
+        offerService.getMostRecentOffers().then((data)=>{
+            setMostRecentItems(data);
+        })
+    }
+
+    const fetchMostPopular = ()=>{
+        offerService.getMostPopularOffers().then((data)=>{
+            setMostPopularItems(data);
         })
     }
 
     const closePopUp = ()=>{
         setShowPopup(false);
         fetchOffers();
+        fetchMostRecent();
+        fetchMostPopular();
     }
 
     const openPopUp = (id)=>{
@@ -43,15 +84,48 @@ export const OfferPage = ()=>{
     const onRemoveOffer = (id)=>{
         offerService.removeOffer(id).then(()=>{
             fetchOffers();
+            fetchMostRecent();
+            fetchMostPopular();
         })
     }
 
+    const onChangeQuery = (value)=>{
+        const constructValues = {...query, ...value};
+        setQuery(constructValues);
+    }
+
+    const fetchAds = (FileUsageType)=>{
+        fileService.getFilesByModuleAndRefAndFileUsage(MODULE_TYPE.ADVERTISEMENT, 0, FileUsageType).then((data)=>{
+            if(FileUsageType == FILE_USAGE_TYPE.L1Ads){
+                setL1Ad(data[0]);
+            }
+            else if(FileUsageType == FILE_USAGE_TYPE.CS1 || FileUsageType == FILE_USAGE_TYPE.CS2 || FileUsageType == FILE_USAGE_TYPE.CS3){
+                const constructValues = sliderImage;
+                constructValues[FileUsageType] = data[0];
+                setSliderImage(constructValues);
+            }
+            else{
+                setL2Ad(data[0]);
+            }
+        })
+    };
+
+    const fetchAllSliders = ()=>{
+        fetchAds(FILE_USAGE_TYPE.CS1);
+        fetchAds(FILE_USAGE_TYPE.CS2);
+        fetchAds(FILE_USAGE_TYPE.CS3);
+    } 
+
+    const onChangePagination = (value)=>{
+        onChangeQuery({Pagination: {...query.Pagination, ...value}});
+    }
+
+    const handlePageClick = (page) => {
+        fetchOffers({...query, Pagination: {...query.Pagination, PageNumber: page.PageNumber} });
+        onChangePagination({PageNumber: page.PageNumber});
+    };
+
     const renderOfferCard = (v, i)=>{
-        const dateFormatOptions = {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        };
 
         return (
             <div class="col-lg-4 py-3" key={i}>
@@ -63,10 +137,10 @@ export const OfferPage = ()=>{
                     </div>
                     <div class="body">
                         <h5 class="post-title">
-                            <a href="#">{v.Title}</a>
+                            <Link to={`/${btoa(v.OfferID)}`}>{v.Title}</Link>
                         </h5>
                         <div>
-                            <Link to="/brands" className="badge badge-light p-1 border mb-2">{v.BrandName}</Link>
+                            <button onClick={()=> navigate('/brands', {state: {SearchText : v.BrandName}})} className="badge badge-light p-1 border mb-2">{v.BrandName}</button>
                         </div>
                         <div class="post-date d-flex justify-content-between flex-wrap">
                             <span>{moment(v.CreatedOn).fromNow()}</span>
@@ -81,12 +155,21 @@ export const OfferPage = ()=>{
                         </div>
 
                         <div className="d-flex flex-wrap mt-2">
-                            <button className="btn btn-warning mr-2" onClick={()=> openPopUp(v.OfferID)}>
-                                <i class="fa fa-pencil" aria-hidden="true"></i>
-                            </button>
-                            <button className="btn btn-danger" onClick={()=> onRemoveOffer(v.OfferID)}>
-                                <i class="fa fa-trash-o" aria-hidden="true"></i>
-                            </button>
+                            {isLogin &&
+                            <>  
+                                {(isBrandUser() ? user.BrandID == v.BrandID && isVerifiedBrand : false) && 
+                                    <button className="btn btn-warning mr-2" onClick={()=> openPopUp(v.OfferID)}>
+                                        <i class="fa fa-pencil" aria-hidden="true"></i>
+                                    </button>
+                                }
+                                
+                                {( (isBrandAdmin() || isBrandRootAdmin() ? user.BrandID == v.BrandID && isVerifiedBrand : false) || isAdmin() )&&
+                                    <button className="btn btn-danger" onClick={()=> onRemoveOffer(v.OfferID)}>
+                                        <i class="fa fa-trash-o" aria-hidden="true"></i>
+                                    </button>
+                                }
+                            </>
+                            }
                         </div>
                     </div>
                 </div>
@@ -94,86 +177,98 @@ export const OfferPage = ()=>{
         )
     } 
 
-    console.log('user', user);
     return (
         <div>
-            <BreadCrumb childTitle="offers" moduleTitle="Offers"/>
+            
+            <header>
+                <div class="container">
+                    <div className="row">
+                            <div className="col-md-12 mt-3">
+                                <Carousel className="border" variant="dark">
+                                    <Carousel.Item>
+                                        <div className="ads-carousel-image">
+                                            <img src={!isUndefinedNullOrEmpty(sliderImage[FILE_USAGE_TYPE.CS1]) ? resolveImageURL(sliderImage[FILE_USAGE_TYPE.CS1].Name) : defaultCarouselImage } className="w-100 h-100"/>
+                                        </div>
+                                    </Carousel.Item>
+                                    <Carousel.Item>
+                                        <div className="ads-carousel-image">
+                                            <img src={!isUndefinedNullOrEmpty(sliderImage[FILE_USAGE_TYPE.CS2]) ? resolveImageURL(sliderImage[FILE_USAGE_TYPE.CS2].Name) : defaultCarouselImage } className="w-100 h-100"/>
+                                        </div>
+                                    </Carousel.Item>
+                                    <Carousel.Item>
+                                        <div className="ads-carousel-image">
+                                            <img src={!isUndefinedNullOrEmpty(sliderImage[FILE_USAGE_TYPE.CS3]) ? resolveImageURL(sliderImage[FILE_USAGE_TYPE.CS3].Name) : defaultCarouselImage } className="w-100 h-100"/>
+                                        </div>
+                                    </Carousel.Item>
+                                </Carousel>
+                            </div>
+                    </div>
+                </div>
+            </header>
+
             <div className="container-fluid p-2">
                 <div className="row m-0">
-                    <div className="col-md-2">
-                        <div className="d-flex justify-content-center">
-                            <img src="https://www.healthyads.com/wp-content/uploads/2019/01/300x1050-portrait-ad.jpg" className="w-auto h-100"/>
-                        </div>
-                    </div>
-                    <div className="col-md-8 p-5">
-
-                        <div class="d-flex justify-content-center">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <CategorySelector className="rounded-0"/>
-                                </div>
-                                <input type="text" class="form-control rounded-0" placeholder="Search..."/>
-                            </div>
-                            <div class="ml-3">
-                                <button class="btn btn-light p-0 d-flex justify-content-center align-items-center h-100 border" style={{width: 100}}>Filter <i class="fa fa-filter ml-2" aria-hidden="true"></i></button>
-                            </div>
-                        </div>
-
-                        <div className="d-flex pt-3 flex-wrap align-items-center">
-                            <div class="form-group form-check mb-0 mr-3">
-                                <input type="checkbox" class="form-check-input" id="exampleCheck1"/>
-                                <label class="form-check-label" for="exampleCheck1">Upcomming Offers</label>
-                            </div>
-
-                            <div class="form-group form-check mb-0 mr-3">
-                                <input type="checkbox" class="form-check-input" id="exampleCheck2"/>
-                                <label class="form-check-label" for="exampleCheck2">Expired Offers</label>
-                            </div>
-
-                            <div class="form-group form-check mb-0 mr-3">
-                                <input type="checkbox" class="form-check-input" id="exampleCheck3"/>
-                                <label class="form-check-label" for="exampleCheck3">My Offers</label>
-                            </div>
-
-                            <div class="form-group  mb-0">
-                                <button className="btn btn-primary" onClick={()=> openPopUp(null)}>Add New Offer</button>
-                            </div>
-                            
-                        </div>
-
+                    <div className="col-md-12 p-5">
                         <div className="container">
-                            <div class="row my-5">
-                                {items.map(renderOfferCard)}
+                            <div class="row">
+                                <div className="col-md-12 mb-3">
+                                    <h3>Most recent offers</h3>
+                                    <div className="row p-0 m-0 w-100 mt-4">
+                                        {mostRecentItems.map(renderOfferCard)}
+                                    </div>
+                                </div>
+
+                                <div className="col-md-12 mb-5">
+                                    <div className="horizontal-ads-box border">
+                                        <img src={!isUndefinedNullOrEmpty(L1Ad) ? resolveImageURL(L1Ad.Name) : defaultBannerImage } className="w-100 h-100"/>
+                                    </div>
+                                </div>
+
+                                <div className="col-md-12 mb-3">
+                                    <h3>Most popular offers</h3>
+                                    <div className="row p-0 m-0 w-100 mt-4">
+                                        {mostPopularItems.map(renderOfferCard)}
+                                    </div>
+                                </div>
+
+                                <div className="col-md-12 mb-5">
+                                    <div className="horizontal-ads-box border">
+                                        <img src={!isUndefinedNullOrEmpty(L2Ad) ? resolveImageURL(L2Ad.Name) : defaultBannerImage } className="w-100 h-100"/>
+                                    </div>
+                                </div>
+
+                                <div className="col-md-12 mb-3">
+                                    <h3 className="mb-3">All offers</h3>
+                                    <div className="mb-5 d-flex">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control rounded-0" value={query.SearchText} placeholder="Search..." onChange={(e)=> onChangeQuery({SearchText: e.target.value})}/>
+                                        </div>
+                                        <div class="ml-3">
+                                            <button class="btn btn-secondary p-0 d-flex justify-content-center align-items-center h-100 border" style={{width: 100}} onClick={()=> fetchOffers()}>Filter <i class="fa fa-filter ml-2" aria-hidden="true"></i></button>
+                                        </div>
+                                        <div class="ml-3">
+                                            <button class="btn btn-danger p-0 d-flex justify-content-center align-items-center h-100 border" style={{width: 100}} onClick={()=>{fetchOffers(new OfferFilterModel()); onChangeQuery(new OfferFilterModel());}}>Reset</button>
+                                        </div>
+                                        {isLogin && isBrandUser() && isVerifiedBrand &&
+                                            <div class="ml-3">
+                                                <button class="btn btn-primary p-0 d-flex justify-content-center align-items-center h-100 border" style={{width: 100}} onClick={()=> openPopUp(null)}>Add New</button>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div className="row p-0 m-0 w-100 mt-4">
+                                        {items.map(renderOfferCard)}
+                                    </div>
+                                    <Pagination paging={query.Pagination} handlePageClick={handlePageClick}/>
+
+                                </div>
+
                             </div>
-
-                            <nav aria-label="Page Navigation">
-                                <ul class="pagination justify-content-center">
-                                    <li class="page-item disabled">
-                                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-                                    </li>
-                                    <li class="page-item"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item active" aria-current="page">
-                                        <a class="page-link" href="#">2 <span class="sr-only">(current)</span></a>
-                                    </li>
-                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">Next</a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-
-                    </div>
-                    <div className="col-md-2">
-                        <div className="d-flex flex-column justify-content-center">
-                            <img src="https://static.vecteezy.com/system/resources/previews/015/315/097/original/sale-promotion-design-template-for-boxing-day-text-giftbox-and-red-background-simpel-minamal-and-modern-style-white-red-and-green-use-for-banner-advert-and-ads-vector.jpg" className="w-auto h-auto"/>
-                            <img src="https://gourmetads.com/wp-content/uploads/2019/02/300x1050-sodastream.jpg" className="w-auto h-100 mt-3"/>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <PopUp show={showPopup} onClose={closePopUp} title="Add Offer">
+            <PopUp show={showPopup} onClose={closePopUp} title={selectedId ? "Edit Offer" : "Add Offer"}>
                 <OfferForm onClose={()=> closePopUp()} selectedId={selectedId}/>
             </PopUp>
         </div>

@@ -1,7 +1,37 @@
-import React from "react";
+import React,{useState} from "react";
+import * as yup from 'yup';
 import { BreadCrumb } from "../../../components/breadcrumb";
+import {useFormValidation} from '../../../core/hooks/useFormValidation';
+import {WrapErrorMessage, ErrorMessage, getErrorClass} from '../../../components/error-message';
+import { ContactModel } from "../../../core/models/contact-model";
+import contactService from '../service';
+
+const CONTACT_FORM_VALIDATION_SCHEMA = yup.object({
+    Email : yup.string().nullable().email('invalid email').required('required'),
+    Message :  yup.string().nullable().required('required')
+});
 
 export const ContactPage = ()=>{
+    const [contact, setContact] = useState(new ContactModel());
+    const {isValid, errors, onValidate} = useFormValidation(CONTACT_FORM_VALIDATION_SCHEMA);
+    const Error = WrapErrorMessage(ErrorMessage, errors);
+
+    const onChange = (value = {}) => {
+        const constructValues = {...contact, ...value};
+        onValidate(constructValues);
+        setContact(constructValues);
+    } 
+
+    const onSave = ()=>{
+        onValidate(contact).then((isFormValid)=>{
+            if(isFormValid){
+                contactService.createContactMessage(contact).then(()=>{
+                    setContact(new ContactModel());
+                })
+            }
+        })
+    }
+
     return (
         <div>
             <BreadCrumb childTitle="contact" moduleTitle="Contact Us"/>
@@ -35,42 +65,41 @@ export const ContactPage = ()=>{
                         <div class="col-lg-12">
                             <div class="contact-form py-5 px-lg-5">
                                 <h2 class="mb-4 font-weight-medium text-secondary">Get in touch</h2>
+
                                 <div class="row form-group">
-                                <div class="col-md-6 mb-3 mb-md-0">
-                                    <label class="text-black" for="fname">First Name</label>
-                                    <input type="text" id="fname" class="form-control"/>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="text-black" for="lname">Last Name</label>
-                                    <input type="text" id="lname" class="form-control"/>
-                                </div>
+                                    <div class="col-md-12">
+                                        <label class="text-black" for="email">Name</label>
+                                        <input type="text" class="form-control" value={contact.Name} onChange={(e)=> onChange({Name: e.target.value})}/>
+                                    </div>
                                 </div>
                         
                                 <div class="row form-group">
-                                <div class="col-md-12">
-                                    <label class="text-black" for="email">Email</label>
-                                    <input type="email" id="email" class="form-control"/>
-                                </div>
+                                    <div class="col-md-12">
+                                        <label class="text-black" for="email">Email</label>
+                                        <input type="text" id="email" class={`form-control ${getErrorClass('Email',errors)}`} value={contact.Email} onChange={(e)=> onChange({Email: e.target.value})}/>
+                                        <Error property="Email"/>
+                                    </div>
                                 </div>
                         
                                 <div class="row form-group">
                         
                                 <div class="col-md-12">
                                     <label class="text-black" for="subject">Subject</label>
-                                    <input type="text" id="subject" class="form-control"/>
+                                    <input type="text" id="subject" class="form-control" value={contact.Subject} onChange={(e)=> onChange({Subject: e.target.value})}/>
                                 </div>
                                 </div>
                         
                                 <div class="row form-group">
                                 <div class="col-md-12">
                                     <label class="text-black" for="message">Message</label>
-                                    <textarea name="message" id="message" cols="30" rows="5" class="form-control" placeholder="Write your notes or questions here..."></textarea>
+                                    <textarea name="message" id="message" cols="30" rows="5" class={`form-control ${getErrorClass('Message',errors)}`}  placeholder="Write your notes or questions here..." value={contact.Message} onChange={(e)=> onChange({Message: e.target.value})}></textarea>
+                                    <Error property="Message"/>
                                 </div>
                                 </div>
                         
                                 <div class="row form-group mt-4">
                                     <div class="col-md-12">
-                                        <button class="btn btn-primary">Send Message</button>
+                                        <button class="btn btn-primary" disabled={!isValid} onClick={onSave}>Send Message</button>
                                     </div>
                                 </div>
                             </div>

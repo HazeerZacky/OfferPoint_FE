@@ -6,7 +6,7 @@
 }
 .brand-image{
     height: 130px;
-    width: auto;
+    width: 130px;
     border-radius: 50%;
 }
 .error-message{
@@ -82,3 +82,27 @@
     font-size: 13px;
     font-weight: bold;
   }
+
+  .cursor-pointer{
+    cursor: pointer;
+  }
+
+  .horizontal-ads-box{
+    height: 150px;
+    width: 100%;
+    padding: 5px;
+  }
+  .ads-carousel-image{
+    width: 100%;
+    height: 500px;
+  }
+  .ads-carousel-curve{
+    border-radius: 50px;
+  }
+.error-message{
+  color: red;
+  font-size: 13px;
+  font-weight: 500;
+  display: block;
+  margin-top: 6px;
+}

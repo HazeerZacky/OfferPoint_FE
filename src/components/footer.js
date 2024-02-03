@@ -23,7 +23,6 @@ export const Footer = (props) => {
                         <h5>Quick Links</h5>
                         <ul className="footer-menu">
                             <li><Link to="/">Home</Link></li>
-                            <li><Link to="/offers">Offers</Link></li>
                             <li><Link to="/brands">Brands</Link></li>
                             <li><a href="#">Terms of Service</a></li>
                             <li><a href="#">Help & Support</a></li>

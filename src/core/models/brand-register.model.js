@@ -8,6 +8,8 @@ export class BrandRegisterModel{
         this.ConfirmPassword = "",
         this.UserType = USER_TYPE.BrandRootAdmin,
         this.Email = "",
-        this.BrandName = ""
+        this.BrandName = "",
+        this.DefaultCategoryID = 0,
+        this.VerificationDocument = null
     }
 }

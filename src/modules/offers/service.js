@@ -5,7 +5,11 @@ export default {
     getAllFiltered,
     getOffer,
     updateOffer,
-    removeOffer
+    removeOffer,
+    getMostRecentOffers,
+    getMostPopularOffers,
+    removeOfferByBrandID,
+    updateOfferViews
 };
 
 
@@ -27,4 +31,20 @@ function getAllFiltered(offerFilterModel){
 
 function getOffer(id){
     return axios.get(`${config.apiEndPoint}/api/OfferPoint/Offer/${id}`).then((res)=> res.data);
+}
+
+function getMostRecentOffers(){
+    return axios.get(`${config.apiEndPoint}/api/OfferPoint/Offer/mostRecentOffers`).then((res)=> res.data);
+}
+
+function getMostPopularOffers(){
+    return axios.get(`${config.apiEndPoint}/api/OfferPoint/Offer/mostPopularOffers`).then((res)=> res.data);
+}
+
+function removeOfferByBrandID(BrandID){
+    return axios.delete(`${config.apiEndPoint}/api/OfferPoint/Offer/removeOfferByBrandID/${BrandID}`).then((res)=> res.data);
+}
+
+function updateOfferViews(OfferID){
+    return axios.put(`${config.apiEndPoint}/api/OfferPoint/Offer/updateOfferViews/${OfferID}/${localStorage.getItem("ClientID")}`).then((res)=> res.data);
 }

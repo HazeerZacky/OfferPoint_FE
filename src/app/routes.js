@@ -3,25 +3,30 @@ import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import {AboutPage} from '../modules/about/pages/about.page';
 import {ContactPage} from '../modules/contact/pages/contact.page';
 import { HomePage } from "../modules/home/pages/home.page";
-import { BrandPage } from "../modules/brand/pages/brand.page";
 import { AppLayout } from "./app-layout";
-import { OfferPage } from "../modules/offers/pages/offer.page";
 import { LoginPage } from "../modules/auth/pages/login.page";
 import { RegisterPage } from "../modules/auth/pages/register.page";
+import {OfferRoutes} from '../modules/offers/routes';
+import { OfferPage } from "../modules/offers/pages/offer.page";
+import { OfferViewPage } from "../modules/offers/pages/offer.view.page";
+import { DashboardPage } from "../modules/dashboard/pages/dashboard.page";
+import { BrandRoutes } from "../modules/brand/routes";
 
 export const AppRoutes = ()=>{
     return (
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<AppLayout/>}>
-                    <Route index element={<HomePage/>}/>
+                    <Route index element={<OfferPage/>}/>
+                    <Route path="/:id" element={<OfferViewPage/>}/>
                     <Route path="/about" element={<AboutPage/>}/>
                     <Route path="/contact" element={<ContactPage/>}/>
-                    <Route path="/brands" element={<BrandPage/>}/>
-                    <Route path="/offers" element={<OfferPage/>}/>
+                    <Route path="/brands/*" element={<BrandRoutes/>}/>
                     <Route path="/login" element={<LoginPage/>}/>
                     <Route path="/register" element={<RegisterPage/>}/>
+                    <Route path="/dashboard" element={<DashboardPage/>}/>
                 </Route>
+
             </Routes>
         </BrowserRouter>
     );
