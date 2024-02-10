@@ -10,6 +10,7 @@ import {WrapErrorMessage, ErrorMessage, getErrorClass} from '../../../components
 
 export const UserForm = (props)=>{
     const [user, setUser] = useState({...new UserModel(), UserType: USER_TYPE.BrandAdmin});
+    const [isDublicateUserName, setIsDublicateUserName] = useState(false);
     const [_prevPassword, set_PrevPassword] = useState('');
     const isEdit = !isUndefinedNullOrEmpty(props.selectedId);
     const USER_FORM_VALIDATION_SCHEMA = yup.object({
@@ -29,27 +30,36 @@ export const UserForm = (props)=>{
         const constructValues = {...user, ...value};
         onValidate(constructValues);
         setUser(constructValues);
+        setIsDublicateUserName(false);
     } 
 
     const onSave = ()=>{
-        onValidate(user).then((isFormValid)=>{
-            if(isFormValid){
-                let userData = user;
-                if(isEdit && userData.Password.trim() == ""){
-                    userData.Password = _prevPassword;
-                }
-                (isEdit ? authService.updateUser : authService.createUser)(userData).then((data)=>{
-                    if(!isEdit){
-                        authService.linkBrandSubUser(data.id, loginUser.BrandID).then(()=>{
-                            props.onClose();
-                        })
+        authService.IsUserNameAlreadyExist(user.UserName, user.UserID).then((isUserNameExist)=>{
+            if(!isUserNameExist){
+                onValidate(user).then((isFormValid)=>{
+                    if(isFormValid){
+                        let userData = user;
+                        if(isEdit && userData.Password.trim() == ""){
+                            userData.Password = _prevPassword;
+                        }
+                        (isEdit ? authService.updateUser : authService.createUser)(userData).then((data)=>{
+                            if(!isEdit){
+                                authService.linkBrandSubUser(data.id, loginUser.BrandID).then(()=>{
+                                    props.onClose();
+                                })
+                            }
+                            else{
+                                props.onClose();
+                            }
+                        });
                     }
-                    else{
-                        props.onClose();
-                    }
-                });
+                })
+                setIsDublicateUserName(false);
             }
-        })
+            else{
+                setIsDublicateUserName(true);
+            }
+        });
     }
 
     const fetchUser = ()=>{
@@ -62,6 +72,11 @@ export const UserForm = (props)=>{
 
     return (
             <div className="container">
+                {isDublicateUserName &&
+                    <div class="alert alert-danger w-100" role="alert">
+                        This user name is already used.
+                    </div>
+                }
                 <div class="row form-group">
                     <div class="col-md-12">
                         <label class="text-black">User Name</label>

@@ -3,7 +3,7 @@ import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import { BreadCrumb } from "../../../components/breadcrumb";
 import { Link, useParams,useNavigate } from "react-router-dom";
-import { isUndefinedNullOrEmpty } from "../../../core/utils/checking";
+import { isURL, isUndefinedNullOrEmpty } from "../../../core/utils/checking";
 import brandService from '../service';
 import { BrandFilterModel } from "../../../core/models/brand-filter-model";
 import { resolveImageURL } from "../../../core/utils/url";
@@ -28,13 +28,21 @@ export const BrandViewPage = (props)=>{
     const [key, setKey] = useState(TAB_KEY.INFO);
     const [brand, setBrand] = useState(null);
     const BrandID = +atob(id);
+    const [isVerifiedBrand, setIsVerifiedBrand] = useState(false);
+    const {isBrandUser} = useAuth();
 
     const onChangeKey = (k)=>{
         setKey(k)
     }
 
     useEffect(()=>{
-        if(BrandID) {fetchBrand();}
+        if(BrandID) {
+            fetchBrand();
+            if(isBrandUser()){
+                brandService.IsVerifiedBrand(BrandID).then((v)=> setIsVerifiedBrand(v));
+            }
+        }
+        
     }, []);
 
     const fetchBrand = ()=>{
@@ -52,10 +60,10 @@ export const BrandViewPage = (props)=>{
                             <div className="col-md-12">
                                 <Tabs activeKey={key} transition={false} onSelect={onChangeKey}>
                                     <Tab eventKey={TAB_KEY.INFO} title="Info" className="p-3">
-                                        {key == TAB_KEY.INFO && <BrandInfo brand={brand} fetchBrand={fetchBrand}/>}
+                                        {key == TAB_KEY.INFO && <BrandInfo brand={brand} fetchBrand={fetchBrand} />}
                                     </Tab>
                                     <Tab eventKey={TAB_KEY.OFFERS} title="Offers" className="p-3">
-                                        {key == TAB_KEY.OFFERS && <OfferListing BrandID={BrandID} brand={brand} fetchBrand={fetchBrand}/>}
+                                        {key == TAB_KEY.OFFERS && <OfferListing BrandID={BrandID} brand={brand} fetchBrand={fetchBrand} isVerifiedBrand={isVerifiedBrand}/>}
                                     </Tab>
                                 </Tabs>
                             </div>
@@ -95,22 +103,33 @@ const BrandInfo = (props)=>{
                             </button>
                         }
                     </div>
-                    <div className="p-3 mb-2">
-                        {brand.Description}
-                    </div>
+                    <p className="brand-descrition-view">{brand.Description.replace(/\n/g, '')}</p>
                     <div className="p-3 d-flex flex-wrap">
-                        <div className="mr-3">
-                            <i class="fa fa-phone mr-2" aria-hidden="true"></i>
-                            <span>{brand.ContactNo}</span>
-                        </div>
+                        {brand.ContactNo &&
+                            <div className="mr-3">
+                                <i class="fa fa-phone mr-2" aria-hidden="true"></i>
+                                <span>{brand.ContactNo}</span>
+                            </div>
+                        }
+
                         <div className="mr-3">
                             {brand.IsVerified ? <i class="fa fa-check-circle-o text-success mr-2"></i> : <i class="fa fa-exclamation-triangle text-warning mr-2" style={{fontSize:15}}></i>}
                             <span>{brand.IsVerified ? 'Verified' : 'Unverified'} brand</span>
                         </div>
-                        <div>
-                            <i class="fa fa-tag mr-2 text-primary"></i>
-                            <span>{brand.CategoryName}</span>
-                        </div>
+                        {brand.CategoryName &&
+                            <div className="mr-3">
+                                <i class="fa fa-tag mr-2 text-primary"></i>
+                                <span>{brand.CategoryName}</span>
+                            </div>
+                        }
+
+                        {brand.Website &&
+                            <div className="mr-3">
+                                <i class="fa fa-globe mr-2 text-accent"></i>
+                                {isURL(brand.Website) ? <a href={brand.Website} target="_blank">{brand.Website}</a> : <span>{brand.Website}</span> }
+                            </div>
+                        }
+
                     </div>
                 </>
             }
@@ -150,6 +169,7 @@ const OfferListing = (props)=>{
     const closePopUp = ()=>{
         setShowPopup(false);
         fetchOffers();
+        props.fetchBrand();
     }
 
     const openPopUp = (id)=>{
@@ -222,12 +242,29 @@ const OfferListing = (props)=>{
             <div className="container">
                 <div className="row">
                     {!isUndefinedNullOrEmpty(brand) &&
-                        <div className="col-lg-12">
-                            <div className="d-flex flex-wrap mb-3">
-                                <span class="badge badge-light p-2 ml-1 mb-1">Promotions ({brand.ActivePromotion})</span>
-                                <span class="badge badge-light p-2 ml-1 mb-1 ">Expired Promotions ({brand.ExpirePromotion})</span>
+                        <>
+                            <div className="col-lg-8">
+                                <div className="d-flex flex-wrap mb-3">
+                                    <span class="badge badge-light p-2 ml-1 mb-1">Promotions ({brand.ActivePromotion})</span>
+                                    <span class="badge badge-light p-2 ml-1 mb-1 ">Expired Promotions ({brand.ExpirePromotion})</span>
+                                </div>
                             </div>
-                        </div>
+                            
+                            {isLogin && isBrandUser() && props.isVerifiedBrand &&
+                                <div className="col-lg-4">
+                                    <div className="d-flex justify-content-end">
+                                        <button className="btn btn-primary" onClick={()=> openPopUp(null)}>ADD NEW OFFER</button>
+                                    </div>
+                                </div>
+                            }
+
+                            {!props.isVerifiedBrand && isLogin && !isAdmin() &&
+                                <div className="alert alert-warning col-lg-12" role="alert">
+                                    Your brand is currenty unverified so you can't add, edit and remove offers,
+                                    contact admin | enquiry@offerpoint.com
+                                </div>
+                            }
+                        </>
                     }
                     {items.map(renderOfferCard)}
                 </div>

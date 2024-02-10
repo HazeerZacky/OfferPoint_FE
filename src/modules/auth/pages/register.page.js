@@ -26,6 +26,7 @@ const REGISTER_FORM_VALIDATION_SCHEMA = yup.object({
 export const RegisterPage = ()=>{
     const [brandAccount, setBrandAccount] = useState(new BrandRegisterModel());
     const [brandVerificationFile, setBrandVerificationFile] = useState(null);
+    const [isDublicateUserName, setIsDublicateUserName] = useState(false);
     const {isValid, errors, onValidate} = useFormValidation(REGISTER_FORM_VALIDATION_SCHEMA);
     const Error = WrapErrorMessage(ErrorMessage, errors);
 
@@ -35,25 +36,34 @@ export const RegisterPage = ()=>{
         const constructValues = {...brandAccount, ...value};
         onValidate(constructValues);
         setBrandAccount(constructValues);
+        setIsDublicateUserName(false);
     } 
 
     const onSave = ()=>{
-        onValidate(brandAccount).then((isFormValid)=>{
-            if(isFormValid){
-                authService.registerBrand(brandAccount).then((data)=>{
-                    if(brandVerificationFile){
-                        const fileToInsert = brandVerificationFile;
-                        fileToInsert.append('ReferenceID', data.id);
-                        fileService.createFile(fileToInsert).then((data)=>{
-                            navigate('/login');
+        authService.IsUserNameAlreadyExist(brandAccount.UserName,0).then((isUserNameExist)=>{
+            if(!isUserNameExist){
+                onValidate(brandAccount).then((isFormValid)=>{
+                    if(isFormValid){
+                        authService.registerBrand(brandAccount).then((data)=>{
+                            if(brandVerificationFile){
+                                const fileToInsert = brandVerificationFile;
+                                fileToInsert.append('ReferenceID', data.id);
+                                fileService.createFile(fileToInsert).then((data)=>{
+                                    navigate('/login');
+                                });
+                            }
+                            else{
+                                navigate('/login');
+                            }
                         });
                     }
-                    else{
-                        navigate('/login');
-                    }
-                });
+                })
+                setIsDublicateUserName(false);
             }
-        })
+            else{
+                setIsDublicateUserName(true);
+            }
+        });
     }
 
     const onChangeFile = (file)=>{
@@ -75,6 +85,13 @@ export const RegisterPage = ()=>{
                 <div class="container">
                     <div className="row align-items-center">
                         <div class="col-lg-12">
+
+                            {isDublicateUserName &&
+                                <div class="alert alert-danger w-100" role="alert">
+                                    This user name is already used.
+                                </div>
+                            }
+
                             <div class="contact-form px-lg-5">
 
                                 <div class="row form-group">

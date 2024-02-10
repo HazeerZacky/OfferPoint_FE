@@ -74,9 +74,8 @@ export const BrandPage = ()=>{
                         <div className="d-flex flex-wrap mb-3">
                             <span class="badge badge-light p-2 ml-1 mb-1">Promotions ({v.ActivePromotion})</span>
                             <span class="badge badge-light p-2 ml-1 mb-1 ">Expired Promotions ({v.ExpirePromotion})</span>
-                            <span class="badge badge-light p-2 ml-1 mb-1 ">{v.ContactNo}</span>
                         </div>
-                        <p className="text-justify">{v.Description}</p>
+                        <p className="brand-description">{v.Description}</p>
                         
                         <div className="d-flex flex-wrap mt-2 justify-content-center">
                             {isLogin && ((isBrandRootAdmin() ? v.BrandID == user.BrandID : false) || isAdmin()) &&
@@ -105,7 +104,7 @@ export const BrandPage = ()=>{
                                 <input type="text" class="form-control rounded-0" value={query.SearchText} placeholder="Search..." onChange={(e)=> onChangeQuery({SearchText: e.target.value})}/>
                             </div>
                             <div class="ml-3">
-                                <button class="btn btn-secondary p-0 d-flex justify-content-center align-items-center h-100 border" style={{width: 100}} onClick={()=> fetchBrands()}>Filter <i class="fa fa-filter ml-2" aria-hidden="true"></i></button>
+                                <button class="btn btn-secondary p-0 d-flex justify-content-center align-items-center h-100 border" style={{width: 100}} onClick={()=> fetchBrands()}>Search</button>
                             </div>
                         </div>
                         <div class="d-flex justify-content-center w-100 pl-3 mb-5">

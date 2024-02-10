@@ -17,11 +17,12 @@ export const AppRoutes = ()=>{
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<AppLayout/>}>
-                    <Route index element={<OfferPage/>}/>
+                    <Route index element={<HomePage/>}/>
                     <Route path="/:id" element={<OfferViewPage/>}/>
                     <Route path="/about" element={<AboutPage/>}/>
                     <Route path="/contact" element={<ContactPage/>}/>
                     <Route path="/brands/*" element={<BrandRoutes/>}/>
+                    <Route path="/offers/*" element={<OfferRoutes/>}/>
                     <Route path="/login" element={<LoginPage/>}/>
                     <Route path="/register" element={<RegisterPage/>}/>
                     <Route path="/dashboard" element={<DashboardPage/>}/>

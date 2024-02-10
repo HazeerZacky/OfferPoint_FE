@@ -137,7 +137,7 @@ export const OfferPage = (props)=>{
                     </div>
                     <div class="body">
                         <h5 class="post-title">
-                            <Link to={`/${btoa(v.OfferID)}`}>{v.Title}</Link>
+                            <Link to={`/offers/${btoa(v.OfferID)}`}>{v.Title}</Link>
                         </h5>
                         <div>
                             <button onClick={()=> navigate('/brands', {state: {SearchText : v.BrandName}})} className="badge badge-light p-1 border mb-2">{v.BrandName}</button>
@@ -180,62 +180,11 @@ export const OfferPage = (props)=>{
     return (
         <div>
             
-            <header>
-                <div class="container">
-                    <div className="row">
-                            <div className="col-md-12 mt-3">
-                                <Carousel className="border" variant="dark">
-                                    <Carousel.Item>
-                                        <div className="ads-carousel-image">
-                                            <img src={!isUndefinedNullOrEmpty(sliderImage[FILE_USAGE_TYPE.CS1]) ? resolveImageURL(sliderImage[FILE_USAGE_TYPE.CS1].Name) : defaultCarouselImage } className="w-100 h-100"/>
-                                        </div>
-                                    </Carousel.Item>
-                                    <Carousel.Item>
-                                        <div className="ads-carousel-image">
-                                            <img src={!isUndefinedNullOrEmpty(sliderImage[FILE_USAGE_TYPE.CS2]) ? resolveImageURL(sliderImage[FILE_USAGE_TYPE.CS2].Name) : defaultCarouselImage } className="w-100 h-100"/>
-                                        </div>
-                                    </Carousel.Item>
-                                    <Carousel.Item>
-                                        <div className="ads-carousel-image">
-                                            <img src={!isUndefinedNullOrEmpty(sliderImage[FILE_USAGE_TYPE.CS3]) ? resolveImageURL(sliderImage[FILE_USAGE_TYPE.CS3].Name) : defaultCarouselImage } className="w-100 h-100"/>
-                                        </div>
-                                    </Carousel.Item>
-                                </Carousel>
-                            </div>
-                    </div>
-                </div>
-            </header>
-
-            <div className="container-fluid p-2">
+            <div className="container-fluid p-2 min-vh-100">
                 <div className="row m-0">
                     <div className="col-md-12 p-5">
                         <div className="container">
                             <div class="row">
-                                <div className="col-md-12 mb-3">
-                                    <h3>Most recent offers</h3>
-                                    <div className="row p-0 m-0 w-100 mt-4">
-                                        {mostRecentItems.map(renderOfferCard)}
-                                    </div>
-                                </div>
-
-                                <div className="col-md-12 mb-5">
-                                    <div className="horizontal-ads-box border">
-                                        <img src={!isUndefinedNullOrEmpty(L1Ad) ? resolveImageURL(L1Ad.Name) : defaultBannerImage } className="w-100 h-100"/>
-                                    </div>
-                                </div>
-
-                                <div className="col-md-12 mb-3">
-                                    <h3>Most popular offers</h3>
-                                    <div className="row p-0 m-0 w-100 mt-4">
-                                        {mostPopularItems.map(renderOfferCard)}
-                                    </div>
-                                </div>
-
-                                <div className="col-md-12 mb-5">
-                                    <div className="horizontal-ads-box border">
-                                        <img src={!isUndefinedNullOrEmpty(L2Ad) ? resolveImageURL(L2Ad.Name) : defaultBannerImage } className="w-100 h-100"/>
-                                    </div>
-                                </div>
 
                                 <div className="col-md-12 mb-3">
                                     <h3 className="mb-3">All offers</h3>
@@ -244,10 +193,10 @@ export const OfferPage = (props)=>{
                                             <input type="text" class="form-control rounded-0" value={query.SearchText} placeholder="Search..." onChange={(e)=> onChangeQuery({SearchText: e.target.value})}/>
                                         </div>
                                         <div class="ml-3">
-                                            <button class="btn btn-secondary p-0 d-flex justify-content-center align-items-center h-100 border" style={{width: 100}} onClick={()=> fetchOffers()}>Filter <i class="fa fa-filter ml-2" aria-hidden="true"></i></button>
+                                            <button class="btn btn-secondary p-0 d-flex justify-content-center align-items-center h-100 border" style={{width: 100}} onClick={()=> fetchOffers()}>Search</button>
                                         </div>
                                         <div class="ml-3">
-                                            <button class="btn btn-danger p-0 d-flex justify-content-center align-items-center h-100 border" style={{width: 100}} onClick={()=>{fetchOffers(new OfferFilterModel()); onChangeQuery(new OfferFilterModel());}}>Reset</button>
+                                            <button class="btn btn-danger p-0 d-flex justify-content-center align-items-center h-100 border" style={{width: 100}} onClick={()=>{fetchOffers(new OfferFilterModel()); onChangeQuery(new OfferFilterModel());}}>Clear</button>
                                         </div>
                                         {isLogin && isBrandUser() && isVerifiedBrand &&
                                             <div class="ml-3">
@@ -255,6 +204,13 @@ export const OfferPage = (props)=>{
                                             </div>
                                         }
                                     </div>
+                                    {!isVerifiedBrand && isLogin && !isAdmin() &&
+                                        <div className="alert alert-warning" role="alert">
+                                            Your brand is currenty unverified so you can't add, edit and remove offers,
+                                            contact admin | enquiry@offerpoint.com
+                                        </div>
+                                    }
+
                                     <div className="row p-0 m-0 w-100 mt-4">
                                         {items.map(renderOfferCard)}
                                     </div>
@@ -268,7 +224,7 @@ export const OfferPage = (props)=>{
                 </div>
             </div>
 
-            <PopUp show={showPopup} onClose={closePopUp} title={selectedId ? "Edit Offer" : "Add Offer"}>
+            <PopUp show={showPopup} onClose={closePopUp} title={selectedId ? "Edit Offer" : "Add Offer"} className="mt-5">
                 <OfferForm onClose={()=> closePopUp()} selectedId={selectedId}/>
             </PopUp>
         </div>

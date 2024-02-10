@@ -9,5 +9,6 @@ export class BrandModel{
         this.IsVerified = false;
         this.BrandDocument = '';
         this.DefaultCategoryID = 0;
+        this.Website = '';
     }
 }

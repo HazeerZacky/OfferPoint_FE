@@ -104,6 +104,13 @@ export const BrandForm = (props)=>{
 
                 <div class="row form-group">
                     <div class="col-md-12">
+                        <label class="text-black">Web Site</label>
+                        <input type="text" class={`form-control`} value={brand.Website} onChange={(e)=> onChange({Website: e.target.value})}/>
+                    </div>
+                </div>
+
+                <div class="row form-group">
+                    <div class="col-md-12">
                         <label class="text-black">Description</label>
                         <textarea type="text" class={`form-control`} rows={5} value={brand.Description} onChange={(e)=> onChange({Description: e.target.value})}></textarea>
                     </div>
@@ -133,12 +140,12 @@ export const BrandForm = (props)=>{
                 }
 
                 <div class="row form-group">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <label class="text-black">Select Brand Picture</label>
                         <FileUpload accept="image/*" onChange={(e)=> onChangeFile(e.target.files[0])}/>
                     </div>
                     {!isUndefinedNullOrEmpty(brandPicturePreview) &&
-                        <div className="col-md-6">
+                        <div className="col-md-12">
                             <div>
                                 <img className="w-100 h-auto mt-4" src={brandPicturePreview}/>
                             </div>

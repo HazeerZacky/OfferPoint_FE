@@ -9,7 +9,8 @@ export default {
     updateUser,
     createUser,
     getUser,
-    linkBrandSubUser
+    linkBrandSubUser,
+    IsUserNameAlreadyExist
 };
 
 function registerBrand(brandUser){
@@ -46,4 +47,8 @@ function getUser(id){
 
 function linkBrandSubUser(UserID, BrandID){
     return axios.post(`${config.apiEndPoint}/api/OfferPoint/User/linkBrandSubUser/${UserID}/${BrandID}`).then((res)=> res.data);
+}
+
+function IsUserNameAlreadyExist(UserName, UserID){
+    return axios.get(`${config.apiEndPoint}/api/OfferPoint/User/IsUserNameAlreadyExist/${UserName}/${UserID}`).then((res)=> res.data);
 }

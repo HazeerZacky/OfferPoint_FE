@@ -39,6 +39,9 @@ export const TopNavigation = (props)=>{
                             <NavLink to="/" className="nav-link">Home</NavLink>
                         </li>
                         <li className="nav-item">
+                            <NavLink to="/offers" className="nav-link">Offers</NavLink>
+                        </li>
+                        <li className="nav-item">
                             <NavLink to="/brands" className="nav-link">Brands</NavLink>
                         </li>
                         <li className="nav-item">

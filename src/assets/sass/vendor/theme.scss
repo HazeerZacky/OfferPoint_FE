@@ -1693,11 +1693,32 @@ a.text-dark:hover, a.text-dark:focus {
 
 .card-blog .body {
   padding: 20px;
+  min-height: 215px;
 }
-
+.brand-description{
+  display: inline;
+    -webkit-line-clamp: 3;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    word-wrap: break-word;
+    text-align: start;
+}
+.brand-descrition-view{
+  width: 100%;
+  overflow-wrap: break-word; 
+}
 .card-blog .post-title a {
   color: #645F88;
   transition: color .2s ease;
+  display: inline;
+  -webkit-line-clamp: 2;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  word-wrap: break-word;
 }
 
 .card-blog .post-title a:hover,

@@ -151,12 +151,12 @@ export const OfferForm = (props)=>{
                 </div>
 
                 <div class="row form-group">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <label class="text-black">Select Offer Picture</label>
                         <FileUpload accept="image/*" onChange={(e)=> onChangeFile(e.target.files[0])}/>
                     </div>
                     {!isUndefinedNullOrEmpty(offerPicturePreview) &&
-                        <div className="col-md-6">
+                        <div className="col-md-12">
                             <div>
                                 <img className="w-100 h-auto mt-4" src={offerPicturePreview}/>
                             </div>

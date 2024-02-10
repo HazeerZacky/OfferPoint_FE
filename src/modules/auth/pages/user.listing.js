@@ -9,10 +9,13 @@ import { PopUp } from "../../../components/popup";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { PaginationModel } from "../../../core/models/pagination";
 import { Pagination } from "../../../components/pagination";
+import { BrandForm } from "../../brand/components/brand.form";
 
 export const UserListing = ()=>{
     const [showPopup, setShowPopup] = useState(false);
+    const [showBrandPopup, setShowBrandPopup] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
+    const [selectedBrandId, setSelectedBrandId] = useState(null);
     const [items, setItems] = useState([]);
     const {isBrandRootAdmin, user, isAdmin, isBrandAdmin, isBrandUser} = useAuth();
     const [query, setQuery] = useState({isNeedSubUsers: !isAdmin(), BrandID: isBrandUser() ? user.BrandID : 0, isExcludeAdmin: !isAdmin(), Pagination: new PaginationModel()});
@@ -54,6 +57,16 @@ export const UserListing = ()=>{
     const openPopUp = (id)=>{
         setShowPopup(true);
         setSelectedId(id);
+    }
+
+    const closeBrandPopUp = ()=>{
+        setShowBrandPopup(false);
+        fetchUsers();
+    }
+
+    const openBrandPopUp = (id)=>{
+        setShowBrandPopup(true);
+        setSelectedBrandId(id);
     }
 
     const onRemoveUser = (user)=>{
@@ -101,10 +114,17 @@ export const UserListing = ()=>{
                         }
 
                         {( (isAdmin() && user.UserID != v.UserID) || (isBrandRootAdmin() && user.UserID != v.UserID ? v.UserType == USER_TYPE.BrandAdmin || v.UserType == USER_TYPE.BrandEditor : false) ) &&
-                            <button className="btn btn-danger">
+                            <button className="btn btn-danger mr-2">
                                 <i class="fa fa-trash-o" aria-hidden="true" onClick={()=> onRemoveUser(v)}></i>
                             </button>
                         }
+
+                        {(isAdmin() && v.UserType == USER_TYPE.BrandRootAdmin) &&
+                            <button className="btn btn-primary">
+                                <i class="fa fa-building text-white" aria-hidden="true" onClick={()=> openBrandPopUp(v.BrandID)}></i>
+                            </button>
+                        }
+                        
                     </div>
                 </td>
             </tr>
@@ -139,6 +159,10 @@ export const UserListing = ()=>{
 
             <PopUp show={showPopup} onClose={closePopUp} title={selectedId ? "Edit User" : "Add User"}>
                 <UserForm onClose={()=> closePopUp()} selectedId={selectedId}/>
+            </PopUp>
+
+            <PopUp show={showBrandPopup} onClose={closeBrandPopUp} title={selectedBrandId ? "Edit Brand" : "Add Brand"}>
+                <BrandForm onClose={()=> closeBrandPopUp()} selectedId={selectedBrandId}/>
             </PopUp>
 
         </div>
